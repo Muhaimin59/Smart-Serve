@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/"
+title = "Smart Serve"
+description = "A mobile marketplace that helps customers find trustworthy local service providers with AI-assisted problem understanding, transparent cost estimates, smart matching, and live job coordination, while giving providers a practical console for requests, availability, and earnings."
+version = "1.0.0"
+id = "artifacts/smart-serve"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/" ]
+localPort = 20291
+
+[services.development]
+run = "pnpm --filter @workspace/smart-serve run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/smart-serve", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/smart-serve", "run", "serve" ]
+
+[services.env]
+PORT = "20291"
+BASE_PATH = "/"
