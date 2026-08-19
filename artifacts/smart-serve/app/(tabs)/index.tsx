@@ -1,10 +1,10 @@
 import { Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
-import { useApp } from '@/context/AppContext';
+import { requestApi, useApp } from '@/context/AppContext';
 import { IconButton, PrimaryButton, Screen, SearchField, SectionHeading, Tag, ProviderCard } from '@/components/SmartServeUI';
 
 const categories = [
@@ -16,7 +16,12 @@ const categories = [
 
 export default function HomeScreen() {
   const colors = useColors();
-  const { role, activeBooking, available, setAvailable, locationLabel, setLocationLabel, providers } = useApp();
+  const { role, user, token, activeBooking, available, setAvailable, locationLabel, setLocationLabel, providers } = useApp();
+  const [dashboard, setDashboard] = useState<any>(null);
+  const [services, setServices] = useState<Array<{ slug: string; name: string; icon?: string }>>([]);
+  useEffect(() => { if (token) void requestApi<any>(role === 'provider' ? '/provider/location' : '/customer/location', {}, token).then((d) => { const l=d.location; if (l) setLocationLabel(l.area || l.city || l.formattedAddress || 'Selected location'); }).catch(() => undefined); }, [role, token]);
+  useEffect(() => { if (role === 'provider' && token) void requestApi<any>('/provider/dashboard', {}, token).then(setDashboard).catch(() => undefined); }, [role, token]);
+  useEffect(() => { if (role === 'customer') void requestApi<{ services: Array<{ slug: string; name: string; icon?: string }> }>('/services').then((result) => setServices(result.services.filter((service) => service.slug !== 'more').slice(0, 8))).catch(() => undefined); }, [role]);
   const [search, setSearch] = useState('');
   const [locationBusy, setLocationBusy] = useState(false);
 
@@ -43,12 +48,12 @@ export default function HomeScreen() {
     return (
       <Screen>
         <View style={styles.providerHeader}>
-          <View>
+          <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={[styles.eyebrow, { color: colors.primary }]}>PROVIDER CONSOLE</Text>
-            <Text style={[styles.greeting, { color: colors.foreground }]}>Ready when you are.</Text>
-            <Text style={[styles.subtle, { color: colors.mutedForeground }]}>Your local work, in one calm view.</Text>
+            <Text style={[styles.greeting, { color: colors.foreground }]}>Ready when you are, {formatFirstName(user?.displayName)}.</Text>
+            <Pressable onPress={() => router.push('/location' as any)}><Text style={[styles.subtle, { color: colors.mutedForeground }]}>📍 {locationBusy ? 'Finding you…' : locationLabel}</Text></Pressable>
           </View>
-          <IconButton icon="bell" label="Notifications" />
+          <View style={{ marginLeft: 12 }}><IconButton icon="bell" label="Notifications" onPress={() => router.push({ pathname: '/info', params: { kind: 'notifications' } } as any)} /></View>
         </View>
         <Pressable
           onPress={() => setAvailable(!available)}
@@ -68,29 +73,16 @@ export default function HomeScreen() {
           <Feather name="chevron-right" size={19} color={available ? colors.primaryForeground : colors.foreground} />
         </Pressable>
         <View style={styles.statsRow}>
-          <StatCard label="This month" value="₹28,450" icon="trending-up" />
-          <StatCard label="Trust score" value="94 / 100" icon="shield" accent />
+          <StatCard label="This month" value={`₹${dashboard?.earningsThisMonth ?? 0}`} icon="trending-up" />
+          <StatCard label="Trust score" value={dashboard?.trustScore == null ? "Building" : `${dashboard.trustScore} / 100`} icon="shield" accent />
         </View>
         <SectionHeading title="Today's focus" action="View schedule" onAction={() => router.push('/activity')} />
-        <View style={[styles.jobCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.jobTopRow}>
-            <Tag tone="gold">NEW REQUEST</Tag>
-            <Text style={[styles.jobDistance, { color: colors.mutedForeground }]}>1.8 km away</Text>
-          </View>
-          <Text style={[styles.jobTitle, { color: colors.foreground }]}>Kitchen sink leakage</Text>
-          <Text style={[styles.jobSubtitle, { color: colors.mutedForeground }]}>Today, 10:30 AM · Indiranagar</Text>
-          <View style={styles.jobFooter}>
-            <Text style={[styles.jobPrice, { color: colors.foreground }]}>₹700–₹1,000 estimated</Text>
-            <PrimaryButton style={styles.smallButton} onPress={() => router.push('/provider-job')} icon="arrow-up-right">
-              Review
-            </PrimaryButton>
-          </View>
-        </View>
+        {dashboard?.requests?.[0] ? <View style={[styles.jobCard, { backgroundColor: colors.card, borderColor: colors.border }]}><View style={styles.jobTopRow}><Tag tone="gold">NEW REQUEST</Tag><Text style={[styles.jobDistance, { color: colors.mutedForeground }]}>New</Text></View><Text style={[styles.jobTitle, { color: colors.foreground }]}>{dashboard.requests[0].service}</Text><Text style={[styles.jobSubtitle, { color: colors.mutedForeground }]}>Request received · {dashboard.requests[0].status}</Text><View style={styles.jobFooter}><Text style={[styles.jobPrice, { color: colors.foreground }]}>{dashboard.requests[0].amount ? `₹${dashboard.requests[0].amount}` : 'Quote pending'}</Text><PrimaryButton style={styles.smallButton} onPress={() => router.push('/provider-job')} icon="arrow-up-right">Review</PrimaryButton></View></View> : <View style={[styles.jobCard, { backgroundColor: colors.card, borderColor: colors.border }]}><Text style={[styles.jobTitle, { color: colors.foreground }]}>No new service requests</Text><Text style={[styles.jobSubtitle, { color: colors.mutedForeground }]}>Stay available to receive nearby requests.</Text></View>}
         <SectionHeading title="Performance snapshot" />
         <View style={[styles.performanceCard, { backgroundColor: colors.secondary }]}>
-          <View style={styles.performanceItem}><Text style={[styles.performanceValue, { color: colors.foreground }]}>96%</Text><Text style={[styles.performanceLabel, { color: colors.mutedForeground }]}>On-time arrival</Text></View>
-          <View style={styles.performanceItem}><Text style={[styles.performanceValue, { color: colors.foreground }]}>4.9</Text><Text style={[styles.performanceLabel, { color: colors.mutedForeground }]}>Customer rating</Text></View>
-          <View style={styles.performanceItem}><Text style={[styles.performanceValue, { color: colors.foreground }]}>32</Text><Text style={[styles.performanceLabel, { color: colors.mutedForeground }]}>Jobs completed</Text></View>
+          <View style={styles.performanceItem}><Text style={[styles.performanceValue, { color: colors.foreground }]}>{dashboard?.onTimeRate == null ? '0' : `${dashboard.onTimeRate}%`}</Text><Text style={[styles.performanceLabel, { color: colors.mutedForeground }]}>On-time arrival</Text></View>
+          <View style={styles.performanceItem}><Text style={[styles.performanceValue, { color: colors.foreground }]}>{dashboard?.rating == null ? '—' : dashboard.rating}</Text><Text style={[styles.performanceLabel, { color: colors.mutedForeground }]}>Customer rating</Text></View>
+          <View style={styles.performanceItem}><Text style={[styles.performanceValue, { color: colors.foreground }]}>{dashboard?.completedJobs ?? 0}</Text><Text style={[styles.performanceLabel, { color: colors.mutedForeground }]}>Jobs completed</Text></View>
         </View>
         <PrimaryButton secondary onPress={() => router.push('/provider-job')} icon="briefcase">Open job requests</PrimaryButton>
       </Screen>
@@ -104,17 +96,17 @@ export default function HomeScreen() {
           <Image source={require('../../assets/images/icon.png')} style={styles.logo} />
           <View>
             <Text style={[styles.brandName, { color: colors.foreground }]}>Smart Serve</Text>
-            <Pressable onPress={useCurrentLocation} style={styles.locationRow}>
+            <Pressable onPress={() => router.push('/location' as any)} style={styles.locationRow}>
               <Feather name="map-pin" size={12} color={colors.primary} />
               <Text style={[styles.locationText, { color: colors.mutedForeground }]}>{locationBusy ? 'Finding you…' : locationLabel}</Text>
               <Feather name="chevron-down" size={12} color={colors.mutedForeground} />
             </Pressable>
           </View>
         </View>
-        <IconButton icon="bell" label="Notifications" />
+        <IconButton icon="bell" label="Notifications" onPress={() => router.push({ pathname: '/info', params: { kind: 'notifications' } } as any)} />
       </View>
       <View>
-        <Text style={[styles.eyebrow, { color: colors.primary }]}>GOOD MORNING, ADITI</Text>
+        <Text style={[styles.eyebrow, { color: colors.primary }]}>GOOD MORNING, {formatFirstName(user?.displayName)}</Text>
         <Text style={[styles.greeting, { color: colors.foreground }]}>What can we help with?</Text>
         <Text style={[styles.subtle, { color: colors.mutedForeground }]}>Find someone reliable, before the problem gets bigger.</Text>
       </View>
@@ -153,15 +145,15 @@ export default function HomeScreen() {
             <View style={styles.activeIcon}><Feather name="navigation" size={18} color={colors.primary} /></View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.activeTitle, { color: colors.foreground }]}>{activeBooking.providerName} is on the way</Text>
-              <Text style={[styles.activeSubtitle, { color: colors.mutedForeground }]}>{activeBooking.service} · Arriving in {activeBooking.eta}</Text>
+              <Text style={[styles.activeSubtitle, { color: colors.mutedForeground }]}>{activeBooking.service}{activeBooking.eta ? ` · Arriving in ${activeBooking.eta}` : ' · Location updates available when GPS is shared'}</Text>
             </View>
             <Feather name="arrow-up-right" size={17} color={colors.primary} />
           </Pressable>
         </>
       ) : null}
-      <SectionHeading title="Explore services" action="See all" onAction={() => router.push('/providers')} />
+      <SectionHeading title="Explore services" action="See all" onAction={() => router.push('/services' as any)} />
       <View style={styles.categoryGrid}>
-        {categories.map((category) => (
+        {(services.length ? services.map((service) => ({ icon: service.icon || 'tool', label: service.name, color: 'soft' as const })) : categories).map((category) => (
           <Pressable key={category.label} onPress={() => router.push({ pathname: '/providers', params: { query: category.label } })} style={[styles.category, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={[styles.categoryIcon, { backgroundColor: category.color === 'gold' ? colors.accent : colors.secondary }]}>
               <Feather name={category.icon as React.ComponentProps<typeof Feather>['name']} size={19} color={colors.primary} />
@@ -170,9 +162,9 @@ export default function HomeScreen() {
           </Pressable>
         ))}
       </View>
-      <SectionHeading title="Smart matches near you" action="View all" onAction={() => router.push('/providers')} />
+      <SectionHeading title="Smart matches near you" action="View all" onAction={() => router.push({ pathname: '/providers', params: { query: 'Plumbing' } })} />
       <View style={{ gap: 10 }}>
-        {providers.slice(0, 2).map((provider) => <ProviderCard key={provider.id} provider={provider} onPress={() => router.push({ pathname: '/provider', params: { id: provider.id } })} />)}
+        <Text style={[styles.subtle, { color: colors.mutedForeground }]}>Select a service to see verified providers matched from the marketplace.</Text>
       </View>
     </Screen>
   );
@@ -216,7 +208,7 @@ const styles = StyleSheet.create({
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   category: { width: '48%', minHeight: 72, borderRadius: 17, borderWidth: 1, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },
   categoryIcon: { width: 36, height: 36, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  categoryLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
+  categoryLabel: { flex: 1, flexShrink: 1, fontFamily: 'Inter_600SemiBold', fontSize: 13 },
   providerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   availabilityCard: { borderRadius: 20, padding: 15, flexDirection: 'row', alignItems: 'center', gap: 12 },
   availabilityIcon: { width: 40, height: 40, borderRadius: 14, backgroundColor: '#eff8f3', alignItems: 'center', justifyContent: 'center' },
@@ -239,3 +231,4 @@ const styles = StyleSheet.create({
   performanceValue: { fontFamily: 'Inter_700Bold', fontSize: 18 },
   performanceLabel: { fontFamily: 'Inter_400Regular', fontSize: 10 },
 });
+function formatFirstName(displayName?: string) { const firstName = displayName?.trim().split(/\s+/)[0]; return firstName ? firstName.toUpperCase() : 'THERE'; }

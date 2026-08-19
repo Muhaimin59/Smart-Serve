@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+:root {
+  --ink: #10283a;
+  --ink-deep: #0a1d2c;
+  --teal: #2b8b83;
+  --teal-light: #83c9be;
+  --apricot: #f4a261;
+  --coral: #ec6b4f;
+  --cream: #f3ede1;
+  --sand: #e8dece;
+  --mist: #dce8e2;
+  --white: #fffaf0;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+@theme inline {
+  --color-primary: var(--ink);
+  --color-secondary: var(--teal);
+  --color-accent: var(--apricot);
+  --color-bg-light: var(--cream);
+  --color-bg-dark: var(--ink-deep);
+  --color-bg-muted: var(--sand);
+  --color-text-primary: var(--ink);
+  --color-text-secondary: var(--teal);
+  --color-text-muted: #72858a;
+  --color-text-inverse: var(--white);
+  --color-success: var(--teal);
+  --color-warning: var(--apricot);
+  --color-error: var(--coral);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  background: var(--ink-deep);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.video-root {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+
+.noise {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  z-index: 8;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.65'/%3E%3C/svg%3E");
+}
+
+.grid-lines {
+  background-image: linear-gradient(rgba(243,237,225,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(243,237,225,.08) 1px, transparent 1px);
+  background-size: 4vw 4vw;
+  mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+}
+
+.device-shadow {
+  box-shadow: 1vw 2vw 4vw rgba(4, 16, 25, .34), inset 0 0 0 1px rgba(255,250,240,.12);
+}
+
+.paper-shadow {
+  box-shadow: .7vw 1vw 2.2vw rgba(9, 30, 35, .14);
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(1.2vw, -1.3vh, 0) rotate(3deg); }
+}
+
+@keyframes pulseLine {
+  0%, 100% { opacity: .35; transform: scaleX(.8); }
+  50% { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes scan {
+  0% { transform: translateY(-16vh); opacity: 0; }
+  15%, 80% { opacity: 1; }
+  100% { transform: translateY(15vh); opacity: 0; }
+}
+
+.drift { animation: drift 7s ease-in-out infinite; }
+.pulse-line { animation: pulseLine 2.6s ease-in-out infinite; transform-origin: left; }
+.scan-line { animation: scan 2.8s ease-in-out infinite; }
+
+.type-display { font-family: var(--font-display); }
+.type-body { font-family: var(--font-body); }
+.type-mono { font-family: var(--font-mono); }
+
+@media (prefers-reduced-motion: reduce) {
+  .drift, .pulse-line, .scan-line { animation: none; }
+}

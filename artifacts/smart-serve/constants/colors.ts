@@ -14,46 +14,58 @@
 
 const colors = {
   light: {
-    // Legacy aliases (kept for backward compatibility)
-    text: '#17352e',
-    tint: '#0f766e',
+    // Brand
+    text: '#F4F7FB',
+    tint: '#21C7B7',
 
-    // Core surfaces
-    background: '#f6f8f3',
-    foreground: '#17352e',
+    // Main surfaces
+    background: '#09111F',
+    foreground: '#F4F7FB',
 
-    // Cards / elevated surfaces
-    card: '#ffffff',
-    cardForeground: '#17352e',
+    // Cards
+    card: '#111D30',
+    cardForeground: '#F4F7FB',
 
-    // Primary action color (buttons, links, active states)
-    primary: '#0f766e',
-    primaryForeground: '#ffffff',
+    // Primary — Smart Serve teal
+    primary: '#20C7B7',
+    primaryForeground: '#061A18',
 
-    // Secondary / less-emphasis interactive surfaces
-    secondary: '#e6f1ed',
-    secondaryForeground: '#17463e',
+    // Secondary surfaces
+    secondary: '#17263D',
+    secondaryForeground: '#DCE7F5',
 
-    // Muted / subdued elements (dividers, timestamps, placeholders)
-    muted: '#edf2ed',
-    mutedForeground: '#6c7f78',
+    // Muted
+    muted: '#1B2940',
+    mutedForeground: '#8FA1B7',
 
-    // Accent highlights (badges, selected items, focus rings)
-    accent: '#f4c95d',
-    accentForeground: '#17352e',
+    // Accent — warm coral/orange
+    accent: '#FF8B67',
+    accentForeground: '#1B1110',
 
-    // Destructive actions (delete, error states)
-    destructive: '#c2413b',
-    destructiveForeground: '#ffffff',
+    // Danger
+    destructive: '#FF5F67',
+    destructiveForeground: '#FFFFFF',
 
-    // Borders and input outlines
-    border: '#d9e3dc',
-    input: '#d9e3dc',
+    // Borders
+    border: '#263650',
+    input: '#263650',
+
+    // Additional premium colors
+    success: '#35D49A',
+    warning: '#F7C95B',
+    info: '#65A9FF',
+
+    // Navigation
+    navigation: '#0D1728',
+    navigationActive: '#20C7B7',
+    navigationInactive: '#71839A',
+
+    // Overlay / glass
+    overlay: 'rgba(255,255,255,0.06)',
+    overlayStrong: 'rgba(255,255,255,0.10)',
   },
 
-  // Border radius (in px). Sync from the sibling web artifact's --radius
-  // CSS variable. This value applies to cards, buttons, inputs, and modals.
-  radius: 16,
+  radius: 22,
 };
 
 export default colors;

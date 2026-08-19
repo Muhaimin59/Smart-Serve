@@ -1,0 +1,29 @@
+kind = "video"
+previewPath = "/smart-serve-story/"
+title = "Smart Serve — See. Understand. Trust. Serve."
+description = "A short animated product story showing how Smart Serve helps people understand service problems, compare trusted local providers, book transparently, and track help from request to resolution."
+version = "1.0.0"
+id = "artifacts/smart-serve-story"
+router = "path"
+videoAspectRatio = "16:9"
+
+[[services]]
+name = "web"
+paths = [ "/smart-serve-story/" ]
+localPort = 25208
+
+[services.development]
+run = "pnpm --filter @workspace/smart-serve-story run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/smart-serve-story", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/smart-serve-story/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25208"
+BASE_PATH = "/smart-serve-story/"

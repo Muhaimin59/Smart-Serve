@@ -9,7 +9,8 @@ import { PrimaryButton, Screen, Tag } from '@/components/SmartServeUI';
 export default function BookingScreen() {
   const colors = useColors();
   const { activeBooking, setActiveBooking } = useApp();
-  const booking = activeBooking ?? { providerName: 'Ravi Kumar', service: 'Kitchen sink repair', eta: '12 min', price: '₹700–₹1,000', location: 'Indiranagar, Bengaluru' };
+  const booking = activeBooking;
+  if (!booking) return <Screen><Text style={[styles.title, { color: colors.foreground }]}>No active booking request</Text><Text style={[styles.meta, { color: colors.mutedForeground }]}>Create a real service request to see it here.</Text><PrimaryButton onPress={() => router.replace('/(tabs)' as any)} icon="search">Find a service</PrimaryButton></Screen>;
   const confirm = () => {
     setActiveBooking({ id: activeBooking?.id ?? `booking-${Date.now()}`, providerName: booking.providerName, service: booking.service, status: 'on_the_way', eta: booking.eta, price: booking.price, location: booking.location });
     router.push('/track');
@@ -19,7 +20,7 @@ export default function BookingScreen() {
       <View style={styles.topRow}><Text style={[styles.title, { color: colors.foreground }]}>Review your request</Text><Tag tone="green">PROTECTED</Tag></View>
       <View style={[styles.providerRow, { backgroundColor: colors.secondary }]}>
         <View style={[styles.avatar, { backgroundColor: colors.primary }]}><Text style={[styles.avatarText, { color: colors.primaryForeground }]}>RK</Text></View>
-        <View style={{ flex: 1 }}><Text style={[styles.name, { color: colors.foreground }]}>{booking.providerName}</Text><Text style={[styles.meta, { color: colors.mutedForeground }]}>Verified · Trust score 94 · {booking.eta} away</Text></View>
+        <View style={{ flex: 1 }}><Text style={[styles.name, { color: colors.foreground }]}>{booking.providerName}</Text><Text style={[styles.meta, { color: colors.mutedForeground }]}>Provider verification and arrival details will appear when available</Text></View>
         <Feather name="check-circle" size={18} color={colors.primary} />
       </View>
       <View style={[styles.detailCard, { backgroundColor: colors.card, borderColor: colors.border }]}>

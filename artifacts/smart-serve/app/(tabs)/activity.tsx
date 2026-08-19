@@ -1,14 +1,17 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useApp } from '@/context/AppContext';
+import { requestApi, useApp } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 import { Screen, SectionHeading, Tag } from '@/components/SmartServeUI';
 
 export default function ActivityScreen() {
   const colors = useColors();
-  const { role, activeBooking } = useApp();
+  const { role, token, activeBooking } = useApp();
+  const [dashboard, setDashboard] = useState<any>(null);
+  const [bookings, setBookings] = useState<any[]>([]);
+  useEffect(() => { if (role === 'provider' && token) void requestApi<any>('/provider/dashboard', {}, token).then(setDashboard).catch(() => undefined); if (role === 'customer' && token) void requestApi<{ bookings: any[] }>('/customer/bookings', {}, token).then((result) => setBookings(result.bookings)).catch(() => undefined); }, [role, token]);
   const isProvider = role === 'provider';
   return (
     <Screen>
@@ -21,27 +24,23 @@ export default function ActivityScreen() {
         <>
           <View style={[styles.earningsHero, { backgroundColor: colors.primary }]}>
             <View style={styles.earningsTop}><Text style={[styles.earningsCaption, { color: '#d5f4e8' }]}>AVAILABLE TO PAY OUT</Text><Feather name="more-horizontal" size={20} color="#d5f4e8" /></View>
-            <Text style={[styles.earningsValue, { color: colors.primaryForeground }]}>₹28,450</Text>
-            <View style={styles.earningsBottom}><Text style={[styles.earningsCaption, { color: '#d5f4e8' }]}>+18% from last month</Text><Feather name="trending-up" size={17} color={colors.primaryForeground} /></View>
+            <Text style={[styles.earningsValue, { color: colors.primaryForeground }]}>₹{dashboard?.earningsThisMonth ?? 0}</Text>
+            <View style={styles.earningsBottom}><Text style={[styles.earningsCaption, { color: '#d5f4e8' }]}>{dashboard?.completedJobs ? `${dashboard.completedJobs} completed jobs` : 'No completed jobs yet'}</Text><Feather name="trending-up" size={17} color={colors.primaryForeground} /></View>
           </View>
           <SectionHeading title="Recent jobs" action="See all" />
-          <JobRow title="Kitchen sink leakage" meta="Completed today · ₹850" status="PAID" />
-          <JobRow title="Ceiling fan installation" meta="Yesterday · ₹1,200" status="PAID" />
-          <JobRow title="Laptop setup" meta="Mon, 12 Aug · ₹600" status="PAID" />
+          {dashboard?.recentJobs?.length ? dashboard.recentJobs.map((job: any) => <JobRow key={job.id} title={job.service} meta={`${job.status} · ${job.amount ? `₹${job.amount}` : 'Amount pending'}`} status={job.status.toUpperCase()} />) : <Text style={[styles.subtle, { color: colors.mutedForeground }]}>No completed jobs yet. Your earnings will appear after your first completed job.</Text>}
         </>
       ) : (
         <>
           {activeBooking ? (
             <Pressable onPress={() => router.push('/track')} style={[styles.currentCard, { backgroundColor: colors.secondary }]}>
               <View style={styles.currentIcon}><Feather name="navigation" size={19} color={colors.primary} /></View>
-              <View style={{ flex: 1 }}><Text style={[styles.currentTitle, { color: colors.foreground }]}>Active · {activeBooking.service}</Text><Text style={[styles.currentMeta, { color: colors.mutedForeground }]}>{activeBooking.providerName} · Arriving in {activeBooking.eta}</Text></View>
+              <View style={{ flex: 1 }}><Text style={[styles.currentTitle, { color: colors.foreground }]}>Active · {activeBooking.service}</Text><Text style={[styles.currentMeta, { color: colors.mutedForeground }]}>{activeBooking.providerName}{activeBooking.eta ? ` · Arriving in ${activeBooking.eta}` : ' · Location sharing status available in tracking'}</Text></View>
               <Feather name="chevron-right" size={18} color={colors.primary} />
             </Pressable>
           ) : null}
           <SectionHeading title="Past services" action="Filter" />
-          <JobRow title="Kitchen sink leakage" meta="12 Aug 2026 · ₹850" status="COMPLETED" />
-          <JobRow title="AC servicing" meta="03 Aug 2026 · ₹1,100" status="COMPLETED" />
-          <JobRow title="Bike puncture assistance" meta="28 Jul 2026 · ₹350" status="COMPLETED" />
+          {bookings.length ? bookings.map((booking) => <JobRow key={booking.id} title={booking.service} meta={`${booking.status} · ${booking.amount ? `₹${booking.amount}` : 'Amount pending'}`} status={booking.status.toUpperCase()} />) : <Text style={[styles.subtle, { color: colors.mutedForeground }]}>No bookings yet. Find a service to get started.</Text>}
           <View style={[styles.protectionCard, { backgroundColor: colors.accent }]}>
             <Feather name="shield" size={21} color={colors.accentForeground} />
             <View style={{ flex: 1 }}><Text style={[styles.protectionTitle, { color: colors.accentForeground }]}>Your service protection</Text><Text style={[styles.protectionCopy, { color: '#6d5b29' }]}>Eligible jobs include revisit coverage. Tap any completed service to review it.</Text></View>

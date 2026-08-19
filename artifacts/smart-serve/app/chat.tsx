@@ -12,7 +12,7 @@ export default function ChatScreen() {
   const { activeBooking } = useApp();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', text: 'Hi Aditi, I’m on my way. I’ll inspect the sink before sharing the final quote.', mine: false },
+    { id: '1', text: 'Hi, I’m on my way. I’ll inspect the sink before sharing the final quote.', mine: false },
     { id: '2', text: 'Thank you. Please call when you arrive at the gate.', mine: true },
   ]);
   const send = () => {
@@ -26,7 +26,7 @@ export default function ChatScreen() {
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Pressable onPress={() => router.back()}><Feather name="arrow-left" size={22} color={colors.foreground} /></Pressable>
         <View style={[styles.avatar, { backgroundColor: colors.primary }]}><Text style={[styles.avatarText, { color: colors.primaryForeground }]}>RK</Text></View>
-        <View style={{ flex: 1 }}><Text style={[styles.name, { color: colors.foreground }]}>{activeBooking?.providerName ?? 'Ravi Kumar'}</Text><Text style={[styles.status, { color: colors.primary }]}>Active service · reply usually within 2 min</Text></View>
+        <View style={{ flex: 1 }}><Text style={[styles.name, { color: colors.foreground }]}>{activeBooking?.providerName ?? 'Smart Serve provider'}</Text><Text style={[styles.status, { color: colors.primary }]}>Active service · reply usually within 2 min</Text></View>
         <Feather name="phone" size={19} color={colors.primary} />
       </View>
       <FlatList

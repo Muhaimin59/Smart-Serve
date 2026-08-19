@@ -1,19 +1,23 @@
 import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useApp } from '@/context/AppContext';
+import { requestApi, useApp } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 import { PrimaryButton, Screen, Tag } from '@/components/SmartServeUI';
 
 export default function ProviderProfileScreen() {
   const colors = useColors();
-  const { id } = useLocalSearchParams<{ id?: string }>();
-  const { providers, setActiveBooking } = useApp();
-  const provider = providers.find((item) => item.id === id) ?? providers[0];
-  const book = () => {
-    setActiveBooking({ id: `booking-${Date.now()}`, providerName: provider.name, service: 'Kitchen sink repair', status: 'confirmed', eta: provider.eta, price: provider.price, location: 'Indiranagar, Bengaluru' });
-    router.push('/booking');
+  const { id, serviceId } = useLocalSearchParams<{ id?: string; serviceId?: string }>();
+  const { token, setActiveBooking } = useApp();
+  const [customerLocation, setCustomerLocation] = useState<any>(null);
+  const [provider, setProvider] = useState<any>(null);
+  useEffect(() => { if (token) void requestApi<any>('/customer/location', {}, token).then((d) => setCustomerLocation(d.location)).catch(() => undefined); }, [token]);
+  useEffect(() => { if (token && id) void requestApi<any>(`/providers/${id}`, {}, token).then((data) => setProvider(data.provider)).catch(() => setProvider(null)); }, [token, id]);
+  if (!provider) return <Screen><Text style={[styles.name, { color: colors.foreground }]}>Provider not available</Text><Text style={[styles.service, { color: colors.mutedForeground }]}>This provider is not currently available for this service.</Text></Screen>;
+  const book = async () => {
+    if (!token || !provider?.skills?.[0]?.id || !customerLocation) { router.push('/location' as any); return; }
+    try { const result = await requestApi<any>('/bookings', { method: 'POST', body: JSON.stringify({ serviceId: serviceId || provider.skills[0].id, providerId: provider.id, latitude: customerLocation?.latitude, longitude: customerLocation?.longitude, locationAddress: customerLocation?.formattedAddress, locationArea: customerLocation?.area, locationCity: customerLocation?.city, locationState: customerLocation?.state, locationPostalCode: customerLocation?.postalCode, problemDescription: 'Service requested from provider profile' }) }, token); const b=result.booking; setActiveBooking({ id:b.id, providerName:provider.name, service:provider.skills?.[0]?.name||'Service', status:'confirmed', eta:'', price:'Not available', location:b.locationAddress||customerLocation.formattedAddress||'Selected location', latitude:Number(b.latitude), longitude:Number(b.longitude) }); router.replace('/(tabs)/activity' as any); } catch { }
   };
   return (
     <Screen>
@@ -21,23 +25,23 @@ export default function ProviderProfileScreen() {
       <View style={styles.profileIntro}>
         <View style={[styles.avatar, { backgroundColor: colors.primary }]}><Text style={[styles.avatarText, { color: colors.primaryForeground }]}>{provider.initials}</Text></View>
         <Text style={[styles.name, { color: colors.foreground }]}>{provider.name}</Text>
-        <View style={styles.verifiedRow}><Feather name="check-circle" size={15} color={colors.primary} /><Text style={[styles.verified, { color: colors.primary }]}>Identity & skill verified</Text></View>
-        <Text style={[styles.service, { color: colors.mutedForeground }]}>{provider.service} · {provider.distance} away</Text>
+        <View style={styles.verifiedRow}><Feather name="check-circle" size={15} color={colors.primary} /><Text style={[styles.verified, { color: colors.warning }]}>Verification status unavailable</Text></View>
+        <Text style={[styles.service, { color: colors.mutedForeground }]}>{provider.skills?.map((x:any) => x.name).join(', ') || 'Services'} · {provider.available ? 'Available' : 'Unavailable'}</Text>
       </View>
       <View style={styles.statStrip}>
-        <ProfileStat value={`${provider.trustScore}`} label="Trust score" strong />
-        <ProfileStat value={provider.rating} label="Rating" />
-        <ProfileStat value="96%" label="On time" />
-        <ProfileStat value="186" label="Jobs" />
+        <ProfileStat value="Building" label="Trust score" strong />
+        <ProfileStat value="—" label="Rating" />
+        <ProfileStat value="—" label="On time" />
+        <ProfileStat value="0" label="Jobs" />
       </View>
       <View style={[styles.explainCard, { backgroundColor: colors.secondary }]}>
         <View style={styles.explainTitle}><Feather name="shield" size={18} color={colors.primary} /><Text style={[styles.explainTitleText, { color: colors.foreground }]}>Why Smart Serve recommends them</Text></View>
-        <Text style={[styles.explainCopy, { color: colors.mutedForeground }]}>{provider.reason}. This score weighs verified signals and service consistency, not just public ratings.</Text>
-        <View style={styles.signalList}><Signal text="Identity verified" /><Signal text="Low cancellation rate" /><Signal text="Transparent quotes" /></View>
+        <Text style={[styles.explainCopy, { color: colors.mutedForeground }]}>Provider data is sourced from Smart Serve. Trust metrics will appear after completed jobs and verified reviews.</Text>
+        <View style={styles.signalList}><Signal text="Verification pending" /><Signal text="Service details available after onboarding" /></View>
       </View>
       <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Transparent estimate</Text>
       <View style={[styles.priceCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.priceRow}><Text style={[styles.priceLabel, { color: colors.mutedForeground }]}>AI estimated range</Text><Text style={[styles.priceValue, { color: colors.foreground }]}>{provider.price}</Text></View>
+        <View style={styles.priceRow}><Text style={[styles.priceLabel, { color: colors.mutedForeground }]}>AI estimated range</Text><Text style={[styles.priceValue, { color: colors.foreground }]}>{provider.startingPrice ? `₹${provider.startingPrice}` : 'Not available'}</Text></View>
         <View style={styles.priceRow}><Text style={[styles.priceLabel, { color: colors.mutedForeground }]}>Visit charge</Text><Text style={[styles.priceValue, { color: colors.foreground }]}>Included</Text></View>
         <View style={styles.priceRow}><Text style={[styles.priceLabel, { color: colors.mutedForeground }]}>Final quote</Text><Tag tone="gold">After inspection</Tag></View>
       </View>

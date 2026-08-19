@@ -1,8 +1,8 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
+import { Alert } from 'react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useApp } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 import { PrimaryButton, Screen, Tag } from '@/components/SmartServeUI';
 
@@ -15,12 +15,8 @@ const options = [
 
 export default function EmergencyScreen() {
   const colors = useColors();
-  const { setActiveBooking } = useApp();
   const [selected, setSelected] = useState('Water leakage');
-  const requestHelp = () => {
-    setActiveBooking({ id: `emergency-${Date.now()}`, providerName: 'Nearest verified responder', service: selected, status: 'on_the_way', eta: '9 min', price: '₹900–₹1,600', location: 'Indiranagar, Bengaluru', emergency: true });
-    router.push('/track');
-  };
+  const requestHelp = () => Alert.alert('Emergency matching unavailable', 'Emergency provider dispatch is not implemented in Phase 4. Contact local emergency services if there is immediate danger.');
   return (
     <Screen>
       <View style={styles.topRow}><Pressable onPress={() => router.back()}><Feather name="arrow-left" size={22} color={colors.foreground} /></Pressable><Text style={[styles.topTitle, { color: colors.foreground }]}>Emergency help</Text><Tag tone="gold">FAST TRACK</Tag></View>
@@ -36,7 +32,7 @@ export default function EmergencyScreen() {
           return <Pressable key={option.title} onPress={() => setSelected(option.title)} style={[styles.option, { backgroundColor: active ? colors.secondary : colors.card, borderColor: active ? colors.primary : colors.border }]}><View style={[styles.optionIcon, { backgroundColor: active ? colors.primary : colors.muted }]}><Feather name={option.icon as React.ComponentProps<typeof Feather>['name']} size={18} color={active ? colors.primaryForeground : colors.primary} /></View><View style={{ flex: 1 }}><Text style={[styles.optionTitle, { color: colors.foreground }]}>{option.title}</Text><Text style={[styles.optionCopy, { color: colors.mutedForeground }]}>{option.copy}</Text></View>{active ? <Feather name="check-circle" size={18} color={colors.primary} /> : null}</Pressable>;
         })}
       </View>
-      <View style={[styles.estimate, { backgroundColor: colors.card, borderColor: colors.border }]}><View><Text style={[styles.estimateLabel, { color: colors.mutedForeground }]}>EXPECTED ARRIVAL</Text><Text style={[styles.estimateValue, { color: colors.foreground }]}>Within 9–15 min</Text></View><View style={{ alignItems: 'flex-end' }}><Text style={[styles.estimateLabel, { color: colors.mutedForeground }]}>ESTIMATED RANGE</Text><Text style={[styles.estimateValue, { color: colors.foreground }]}>₹900–₹1,600</Text></View></View>
+      <View style={[styles.estimate, { backgroundColor: colors.card, borderColor: colors.border }]}><View><Text style={[styles.estimateLabel, { color: colors.mutedForeground }]}>EXPECTED ARRIVAL</Text><Text style={[styles.estimateValue, { color: colors.foreground }]}>Live ETA unavailable</Text></View><View style={{ alignItems: 'flex-end' }}><Text style={[styles.estimateLabel, { color: colors.mutedForeground }]}>ESTIMATED RANGE</Text><Text style={[styles.estimateValue, { color: colors.foreground }]}>Estimate unavailable</Text></View></View>
       <PrimaryButton danger onPress={requestHelp} icon="radio">Find emergency help now</PrimaryButton>
       <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>For immediate danger to life or property, contact local emergency services first.</Text>
     </Screen>
