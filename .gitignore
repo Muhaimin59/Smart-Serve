@@ -48,6 +48,13 @@ Thumbs.db
 .cache/
 .local/
 
+# Local development data (embedded Postgres cluster + user uploads)
+.data/
+uploads/*
+!uploads/.gitkeep
+# Demo/seed media referenced by the database seed (committed on purpose)
+!uploads/seed/
+
 # Environment and secrets
 .env
 .env.*
