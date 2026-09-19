@@ -11,11 +11,20 @@ type AppContextValue = { role: AppRole; setRole: (role: AppRole) => void; active
 const providers: Provider[] = [];
 const TOKEN_KEY = 'smart-serve-session-token';
 function getApiBaseUrl() {
+  // Centralized, build-time configuration. Production builds MUST set
+  // EXPO_PUBLIC_API_URL (see eas.json profiles) — the app never hardcodes
+  // a backend address.
   const configured = process.env.EXPO_PUBLIC_API_URL?.trim().replace(/\/$/, '');
   if (configured) return configured;
   if (Platform.OS === 'web') return '';
-  const hostUri = Constants.expoConfig?.hostUri?.split(':')[0];
-  return hostUri ? `http://${hostUri}:5000` : 'http://10.0.2.2:5000';
+  // Dev-only fallback for Expo Go / `pnpm dev` on an emulator or LAN device.
+  // In production builds __DEV__ is false, so a missing EXPO_PUBLIC_API_URL
+  // fails loudly (network error) instead of silently hitting a local address.
+  if (__DEV__) {
+    const hostUri = Constants.expoConfig?.hostUri?.split(':')[0];
+    return hostUri ? `http://${hostUri}:5000` : 'http://10.0.2.2:5000';
+  }
+  return '';
 }
 const apiUrl = (path: string) => `${getApiBaseUrl()}/api${path}`;
 export async function requestApi<T>(path: string, init: RequestInit = {}, token?: string | null): Promise<T> {

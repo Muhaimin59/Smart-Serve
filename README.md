@@ -158,24 +158,45 @@ deployment.
 
 ## Building the mobile app (Android / iOS)
 
-The mobile app lives in `artifacts/smart-serve` (Expo / React Native). To build
-a signed **APK / AAB**:
+The mobile app lives in `artifacts/smart-serve` (Expo / React Native, SDK 54).
+EAS Build config is in `artifacts/smart-serve/eas.json` with three profiles:
 
-1. Sign in / create an account at [expo.dev](https://expo.dev) and run
-   `npx eas-cli login`.
-2. From `artifacts/smart-serve`:
-   ```bash
-   npx eas build -p android --profile production
-   # for a quick .apk (uncompressed) you can use a profile with
-   # "buildType": "apk" in eas.json
-   ```
-3. EAS builds in the cloud (it has the Android SDK / Gradle / Java toolchain)
-   and returns a downloadable `.apk` / `.aab` plus an Expo Go QR code for
-   instant testing on a device.
+| Profile       | Artifact | Use                                      |
+| ------------- | -------- | ---------------------------------------- |
+| `development` | APK      | Development client for local Expo Go-free testing |
+| `preview`     | **APK**  | Directly installable test build (internal distribution) |
+| `production`  | **AAB**  | Google Play submission artifact          |
 
-> Note: building an APK requires the Android toolchain (SDK, Java, Gradle),
-> which is provided by EAS in the cloud. The app's API URL is set with
-> `EXPO_PUBLIC_API_URL` at build time.
+### Prerequisites
+
+1. An [expo.dev](https://expo.dev) account: `npx eas-cli login`
+2. Deployed backend origin, set as `EXPO_PUBLIC_API_URL` (already set in the
+   `preview`/`production` profiles of `eas.json` — update it when the backend
+   moves to a permanent domain).
+3. **Google "Maps SDK for Android" key** (Google Cloud Console → enable
+   *Maps SDK for Android* → create an API key). Provide it at build time as
+   `EXPO_PUBLIC_ANDROID_MAPS_API_KEY` (EAS secret) so map screens work on
+   real Android devices. It is never committed to the repo.
+
+### Build commands
+
+```bash
+cd artifacts/smart-serve
+
+# Installable APK (test on your phone)
+npx eas build --platform android --profile preview
+
+# Google Play App Bundle
+npx eas build --platform android --profile production
+```
+
+EAS builds in the cloud (it has the Android SDK / Java / Gradle toolchain and
+manages the Android signing key), then returns a downloadable `.apk` / `.aab`.
+For Google Play: upload the AAB via Play Console (Internal testing track
+first) — `eas.json` already points `submit.production` at the internal track.
+
+> The mobile app's backend URL comes exclusively from `EXPO_PUBLIC_API_URL`
+> (build time). Production builds never fall back to localhost/10.0.2.2.
 
 ---
 

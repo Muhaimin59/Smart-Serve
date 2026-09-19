@@ -7,7 +7,9 @@
     "dev": "pnpm exec expo start --lan --port ${PORT:-8081}",
     "build": "node scripts/build.js",
     "serve": "node server/serve.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -56,6 +58,9 @@
     "zod-validation-error": "^3.4.0"
   },
   "dependencies": {
-    "react-native-maps": "1.20.1"
+    "react-native-maps": "1.20.1",
+    "expo": "~54.0.36",
+    "react": "19.1.0",
+    "react-native": "0.81.5"
   }
 }

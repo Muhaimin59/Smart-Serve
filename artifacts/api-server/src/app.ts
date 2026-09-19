@@ -61,6 +61,11 @@ app.use("/api", apiRouter);
 // 404 for unknown API routes
 app.use("/api", (_req, res) => res.status(404).json({ success: false, error: { code: "not_found", message: "Route not found." } }));
 
+// Root health probe for deployment/load-balancer checks.
+app.get("/health", (_req: Request, res: Response) => {
+  res.json({ status: "ok" });
+});
+
 // serve the built web app (artifacts/smart-serve-web/dist) with SPA fallback
 const webDist = path.resolve(repoRoot, "artifacts", "smart-serve-web", "dist");
 if (existsSync(webDist)) {
